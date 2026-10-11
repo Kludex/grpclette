@@ -2,7 +2,7 @@
 
 gRPClette is a framework for building gRPC services in Python, based on standard Python type hints.
 
-You write async functions. gRPClette generates the `.proto` schema for you.
+You write async functions. gRPClette generates the `.proto` schema for you. ✨
 
 The key features are:
 
@@ -57,7 +57,7 @@ async def say_hello(request: HelloRequest) -> HelloReply:
 grpclette run main:app
 ```
 
-That's it. You have a gRPC service at `127.0.0.1:50051` with a `SayHello` method.
+That's it. 🚀 You have a gRPC service at `127.0.0.1:50051` with a `SayHello` method.
 
 ### Check it
 
@@ -113,7 +113,7 @@ $ python client.py
 Hello, Ada!
 ```
 
-The client doesn't need gRPClette. It's plain gRPC.
+The client doesn't need gRPClette. It's plain gRPC. 😎
 
 ## Example upgrade
 
@@ -153,7 +153,7 @@ async def watch_greetings(request: HelloRequest) -> AsyncIterator[HelloReply]:
 
 `Field(number=N)` pins the protobuf field number. Clients read values by that number, not by name.
 
-> **Pin field numbers before you ship**
+> **🚨 Pin field numbers before you ship**
 > Without `Field`, gRPClette numbers fields in declaration order. Reordering or removing a field then changes the numbers, and old clients silently read the wrong values. Pin them, and never reuse a removed number.
 
 ## Recap
@@ -171,7 +171,7 @@ And you get:
 - Conversion between protobuf messages and your Python types.
 - A `.proto` schema, to generate clients in any language.
 
-Check the [examples](examples) for all four RPC shapes.
+Check the [examples](examples) for all four RPC shapes. 🎉
 
 ## License
 
