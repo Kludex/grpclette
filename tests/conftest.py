@@ -9,7 +9,6 @@ from typing import Any
 
 import anyio
 import grpc.aio
-import logfire
 import pytest
 import uvicorn
 from grpc_tools import protoc  # type: ignore[import-untyped]
@@ -17,11 +16,6 @@ from starlette.types import ASGIApp
 
 from grpclette import gRPClette
 from tests.service import create_app
-
-
-@pytest.fixture(scope="session", autouse=True)
-def telemetry() -> None:
-    logfire.configure(send_to_logfire=False, console=False)
 
 
 @pytest.fixture

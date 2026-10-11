@@ -86,7 +86,7 @@ class RPCMethod:
     async def unary(
         self, request: Message | AsyncIterator[Message], context: RequestContext[Message, Message]
     ) -> Message:
-        async with handler_errors(self.definition.name):
+        async with handler_errors():
             stack = AsyncExitStack()
             try:
                 incoming = self.incoming(request)
@@ -104,7 +104,7 @@ class RPCMethod:
     async def stream(
         self, request: Message | AsyncIterator[Message], context: RequestContext[Message, Message]
     ) -> AsyncIterator[Message]:
-        async with handler_errors(self.definition.name):
+        async with handler_errors():
             stack = AsyncExitStack()
             try:
                 incoming = self.incoming(request)

@@ -3,14 +3,13 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-import logfire
 from connectrpc.code import Code
 from connectrpc.errors import ConnectError
 from pydantic import ValidationError
 
 
 @asynccontextmanager
-async def handler_errors(method: str) -> AsyncIterator[None]:
+async def handler_errors() -> AsyncIterator[None]:
     try:
         yield
     except ConnectError:
@@ -18,5 +17,4 @@ async def handler_errors(method: str) -> AsyncIterator[None]:
     except ValidationError as exc:
         raise ConnectError(Code.INTERNAL, "The handler returned an invalid response.") from exc
     except Exception as exc:
-        logfire.error("RPC handler {method} failed", method=method, _exc_info=exc)
         raise ConnectError(Code.INTERNAL, "Internal server error.") from exc
