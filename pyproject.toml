@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[project]
+name = "grpclette"
+dynamic = ["version"]
+description = "Python-first gRPC services on Starlette."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "anyio>=4.0,<5",
+    "connectrpc>=0.12.1,<0.13",
+    "logfire>=4",
+    "protobuf>=6.32,<8",
+    "pydantic>=2.11,<3",
+    "starlette>=1.7,<2",
+    "typing-extensions>=4.14",
+]
+
+[project.optional-dependencies]
+server = ["uvicorn>=0.54", "zttp>=0.0.34"]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.8",
+    "grpc-stubs>=1.53.0.6",
+    "grpcio>=1.75",
+    "grpcio-tools>=1.75",
+    "httpx2>=2",
+    "mypy>=1.18",
+    "pytest>=8.4",
+    "ruff>=0.13",
+    "types-protobuf>=6",
+    "uvicorn>=0.54",
+    "zttp>=0.0.34",
+]
+
+[project.scripts]
+grpclette = "grpclette.cli:main"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "FA", "UP", "RUF100"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+strict = true
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+filterwarnings = ["error"]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source_pkgs = ["grpclette", "tests"]
+patch = ["subprocess"]
+sigterm = true
+
+[tool.coverage.report]
+fail_under = 100
+exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError", "@overload"]
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+fallback-version = "0.0.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["grpclette"]
