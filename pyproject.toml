@@ -63,7 +63,7 @@ patch = ["subprocess"]
 sigterm = true
 
 [tool.coverage.report]
-fail_under = 100
+fail_under = "${COVERAGE_FAIL_UNDER-100}"
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError", "@overload"]
 
 [tool.hatch.version]

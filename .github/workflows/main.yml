@@ -37,6 +37,9 @@ jobs:
 
       - name: Run tests
         run: scripts/test
+        env:
+          # CPython 3.11 drops trace events after a cancelled task, so coverage is enforced on 3.12+.
+          COVERAGE_FAIL_UNDER: ${{ matrix.python-version == '3.11' && '0' || '100' }}
 
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
