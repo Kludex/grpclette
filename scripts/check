@@ -1,11 +1,11 @@
-#!/bin/sh
-set -eu
+#!/bin/sh -e
 
-uv run ruff format --check grpclette tests examples
-uv run ruff check grpclette tests examples
-uv run mypy grpclette tests examples
-uv run coverage erase
-uv run coverage run -m pytest "$@"
-uv run coverage combine
-uv run coverage report --show-missing
-uv build
+set -x
+
+SOURCE_FILES="grpclette tests examples"
+
+uv run ruff format --check --diff $SOURCE_FILES
+uv run ruff check $SOURCE_FILES
+uv run mypy $SOURCE_FILES
+uvx check-sdist
+uv lock
