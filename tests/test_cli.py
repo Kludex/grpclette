@@ -88,7 +88,7 @@ def test_optional_server_import_boundary(missing: str, tmp_path: Path) -> None:
     dependencies = tmp_path / "dependencies"
     dependencies.mkdir()
     for directory in site.getsitepackages():
-        for package in Path(directory).iterdir():
+        for package in Path(directory).glob("*"):
             if package.name != missing and not (dependencies / package.name).exists():
                 (dependencies / package.name).symlink_to(package, target_is_directory=package.is_dir())
     script = (
