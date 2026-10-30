@@ -10,13 +10,14 @@ import anyio
 import pytest
 from connectrpc.code import Code
 from connectrpc.errors import ConnectError
-from connectrpc.method import IdempotencyLevel, MethodInfo
+from connectrpc.method import IdempotencyLevel, MethodInfo, StreamType
 from connectrpc.request import RequestContext
 from connectrpc.server import Endpoint
 from google.protobuf.message import Message
 from google.protobuf.wrappers_pb2 import StringValue
 from starlette.types import Message as ASGIMessage, Scope
 
+from grpclette import RPCContext
 from grpclette.transport import RPCTransport
 
 pytestmark = pytest.mark.anyio
@@ -29,6 +30,7 @@ def method() -> MethodInfo[Message, Message]:
         input=StringValue,
         output=StringValue,
         idempotency_level=IdempotencyLevel.UNKNOWN,
+        stream_type=StreamType.UNARY,
     )
 
 
@@ -171,14 +173,14 @@ async def test_duplicate_timeout_is_invalid() -> None:
         (b"1M", 60000),
         (b"1S", 1000),
         (b"1000m", 1000),
-        (b"99999999u", 99999),
-        (b"99999999n", 99),
+        (b"99999999u", 99999.999),
+        (b"99999999n", 99.999999),
         (b"00000001S", 1000),
     ],
 )
-async def test_timeout_context(value: bytes, milliseconds: int) -> None:
+async def test_timeout_context(value: bytes, milliseconds: float) -> None:
     async def handler(request: Message, context: RequestContext[Message, Message]) -> Message:
-        remaining = context.timeout_ms
+        remaining = RPCContext(context, {}).timeout_ms
         assert remaining is not None and 0 < remaining <= milliseconds
         return request
 
@@ -744,12 +746,8 @@ async def test_external_handler_cancellation_is_not_silent_success() -> None:
     async def handler(request: Message, context: RequestContext[Message, Message]) -> Message:
         raise asyncio.CancelledError
 
-    with pytest.raises(ExceptionGroup) as caught:
-        await invoke(RPCTransport({"/test.Service/Echo": Endpoint.unary(method(), handler)}, 1024), scope())
-    assert len(caught.value.exceptions) == 1
-    error = caught.value.exceptions[0]
-    assert isinstance(error, ConnectError)
-    assert error.code == Code.CANCELED
+    sent = await invoke(RPCTransport({"/test.Service/Echo": Endpoint.unary(method(), handler)}, 1024), scope())
+    assert status(sent) == b"1"
 
 
 async def test_deadline_response_handles_closed_send() -> None:

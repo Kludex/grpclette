@@ -10,7 +10,7 @@ from typing import Any, cast, get_args, get_origin, get_type_hints
 import anyio
 from connectrpc.code import Code
 from connectrpc.errors import ConnectError
-from connectrpc.method import IdempotencyLevel, MethodInfo
+from connectrpc.method import IdempotencyLevel, MethodInfo, StreamType
 from connectrpc.request import RequestContext
 from connectrpc.server import Endpoint
 from google.protobuf.empty_pb2 import Empty
@@ -68,20 +68,23 @@ class RPCMethod:
         )
 
     def endpoint(self, service_name: str) -> Endpoint[Message, Message]:
-        info = MethodInfo(
-            name=self.definition.name,
-            service_name=service_name,
-            input=self.definition.input,
-            output=self.definition.output,
-            idempotency_level=IdempotencyLevel.UNKNOWN,
-        )
+        def info(stream_type: StreamType) -> MethodInfo[Message, Message]:
+            return MethodInfo(
+                name=self.definition.name,
+                service_name=service_name,
+                input=self.definition.input,
+                output=self.definition.output,
+                idempotency_level=IdempotencyLevel.UNKNOWN,
+                stream_type=stream_type,
+            )
+
         if self.definition.server_streaming:
             if self.definition.client_streaming:
-                return Endpoint.bidi_stream(info, self.stream)
-            return Endpoint.server_stream(info, self.stream)
+                return Endpoint.bidi_stream(info(StreamType.BIDI_STREAM), self.stream)
+            return Endpoint.server_stream(info(StreamType.SERVER_STREAM), self.stream)
         if self.definition.client_streaming:
-            return Endpoint.client_stream(info, self.unary)
-        return Endpoint.unary(info, self.unary)
+            return Endpoint.client_stream(info(StreamType.CLIENT_STREAM), self.unary)
+        return Endpoint.unary(info(StreamType.UNARY), self.unary)
 
     async def unary(
         self, request: Message | AsyncIterator[Message], context: RequestContext[Message, Message]

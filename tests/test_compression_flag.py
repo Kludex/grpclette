@@ -3,7 +3,7 @@ from __future__ import annotations
 import struct
 
 import pytest
-from connectrpc.method import IdempotencyLevel, MethodInfo
+from connectrpc.method import IdempotencyLevel, MethodInfo, StreamType
 from connectrpc.request import RequestContext
 from connectrpc.server import Endpoint
 from google.protobuf.message import Message
@@ -40,6 +40,7 @@ async def test_compressed_flag_requires_encoding_header() -> None:
         input=StringValue,
         output=StringValue,
         idempotency_level=IdempotencyLevel.UNKNOWN,
+        stream_type=StreamType.UNARY,
     )
     await RPCTransport({"/example.Service/Echo": Endpoint.unary(method, handler)}, 1024)(
         {

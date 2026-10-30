@@ -9,7 +9,7 @@ import anyio
 from connectrpc.code import Code
 from connectrpc.compat import google_protobuf_codecs
 from connectrpc.errors import ConnectError
-from connectrpc.method import IdempotencyLevel, MethodInfo
+from connectrpc.method import IdempotencyLevel, MethodInfo, StreamType
 from connectrpc.request import RequestContext
 from connectrpc.server import ConnectASGIApplication, Endpoint
 from google.protobuf.message import Message
@@ -66,6 +66,8 @@ class RPCTransport:
             value = timeout_headers[0]
             timeout = int(value[:-1]) * {b"H": 3600, b"M": 60, b"S": 1, b"m": 1e-3, b"u": 1e-6, b"n": 1e-9}[value[-1:]]
         deadline = anyio.current_time() + timeout if timeout is not None else None
+        # grpclette enforces the deadline; connectrpc's own timer would cancel handler cleanup a second time.
+        inner_scope = {**scope, "headers": [(key, value) for key, value in headers if key.lower() != b"grpc-timeout"]}
         path = scope["path"]
         if path not in self._endpoints and path.removeprefix(scope.get("root_path", "")) not in self._endpoints:
             await _error_response(Code.UNIMPLEMENTED, scope, receive, send)
@@ -106,10 +108,7 @@ class RPCTransport:
             task_status.started(cast(asyncio.Task[None], asyncio.current_task()).cancel)
             token = RPC_DEADLINE.set(deadline)
             try:
-                await self._application(scope, guarded_receive, guarded_send)
-            except ConnectError:
-                if aborted is None:
-                    raise
+                await self._application(inner_scope, guarded_receive, guarded_send)
             except OSError:
                 if aborted is None:
                     aborted = Code.CANCELED
@@ -185,6 +184,7 @@ async def _error_response(code: Code, scope: Scope, receive: Receive, send: Send
             input=Message,
             output=Message,
             idempotency_level=IdempotencyLevel.UNKNOWN,
+            stream_type=StreamType.CLIENT_STREAM,
         ),
         reject,
     )
