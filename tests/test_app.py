@@ -7,8 +7,6 @@ from typing import Annotated, Any
 
 import anyio
 import pytest
-from connectrpc.code import Code
-from connectrpc.errors import ConnectError
 from google.protobuf.timestamp_pb2 import Timestamp
 from pydantic import BaseModel
 from starlette.testclient import TestClient
@@ -285,19 +283,18 @@ async def test_outer_cancellation_awaits_dependency_and_generator_cleanup(kind: 
             entered.set()
             await anyio.sleep_forever()
 
-    with pytest.raises(ExceptionGroup) as caught, anyio.fail_after(2):
+    with anyio.fail_after(2):
         if cancel == "task":
             task = asyncio.create_task(app(scope, receive, send))
             await entered.wait()
             task.cancel()
-            await task
+            with pytest.raises(asyncio.CancelledError):
+                await task
         else:
             async with anyio.create_task_group() as tasks:
                 tasks.start_soon(app, scope, receive, send)
                 await entered.wait()
                 tasks.cancel_scope.cancel()
-    assert caught.value.split(ConnectError)[1] is None
-    assert caught.value.subgroup(lambda exc: isinstance(exc, ConnectError) and exc.code != Code.CANCELED) is None
     assert cleaned.is_set()
     assert generator_cleaned.is_set() == (kind in ("server", "bidi"))
     assert events == (["generator", "dependency"] if kind in ("server", "bidi") else ["dependency"])

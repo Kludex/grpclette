@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "anyio>=4.0,<5",
-    "connectrpc>=0.12.1,<0.13",
+    "connectrpc>=0.13,<0.14",
     "protobuf>=6.32,<8",
     "pydantic>=2.11,<3",
     "starlette>=1.7,<2",
